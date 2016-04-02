@@ -9,7 +9,7 @@ use Psr\Log\LoggerInterface;
 
 /**
  * Class LoggerDispatcher
- *
+
  * @package BaseLogger\Lib\Component
  */
 class LoggerDispatcher extends AbstractLogger
@@ -43,7 +43,6 @@ class LoggerDispatcher extends AbstractLogger
      * @param mixed $level
      * @param string $message
      * @param array $context
-     *
      * @return null
      */
     public function log($level, $message, array $context = [])
