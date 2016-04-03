@@ -4,6 +4,7 @@ namespace BaseLogger\Lib\Component;
 
 use BaseExceptions\Exception\InvalidArgument\EmptyStringException;
 use BaseExceptions\Exception\InvalidArgument\NotStringException;
+use BaseLogger\Lib\Util\RandomGenerator;
 use Psr\Log\AbstractLogger;
 use Psr\Log\LoggerInterface;
 
@@ -18,6 +19,20 @@ class LoggerDispatcher extends AbstractLogger
      * @var LoggerInterface[]
      */
     private $loggerList = [];
+
+    /**
+     * @var string
+     */
+    private $sessionId;
+
+    /**
+     * LoggerDispatcher constructor.
+     */
+    public function __construct()
+    {
+        $randomGenerator = new RandomGenerator();
+        $this->sessionId = $randomGenerator->generateString(12);
+    }
 
     /**
      * Register new logger to dispatcher
@@ -47,6 +62,11 @@ class LoggerDispatcher extends AbstractLogger
      */
     public function log($level, $message, array $context = [])
     {
+        // Add session if to context if not exist
+        if (empty($context["sessionId"])) {
+            $context["sessionId"] = $this->sessionId;
+        }
+        
         foreach ($this->loggerList as $logger) {
             $logger->log($level, $message, $context);
         }

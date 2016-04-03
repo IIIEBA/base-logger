@@ -4,6 +4,7 @@ namespace BaseLogger\Module\Logger;
 
 use BaseExceptions\Exception\InvalidArgument\EmptyStringException;
 use BaseExceptions\Exception\InvalidArgument\NotStringException;
+use BaseLogger\Lib\Component\LoggerDispatcher;
 use Psr\Log\AbstractLogger;
 use Psr\Log\LogLevel;
 use Raven_Stacktrace;
@@ -49,7 +50,15 @@ class SentryLogger extends AbstractLogger
         ];
         
         $this->levelList = !empty($levelList) ? array_intersect($allowedLevels, $levelList) : $allowedLevels;
-        $this->client = new \Raven_Client($dns);
+        $this->client = new \Raven_Client(
+            $dns,
+            [
+                "tags" => [
+                    "phpVersion" => phpversion(),
+                ],
+                "timeout" => 1
+            ]
+        );
     }
 
     /**
@@ -72,8 +81,16 @@ class SentryLogger extends AbstractLogger
         }
 
         // Build trace
-        $trace = debug_backtrace();
-        array_shift($trace);
+        if (!array_key_exists("exception", $context)) {
+            $trace = debug_backtrace();
+            array_shift($trace);
+
+            if ($trace[0]["class"] === LoggerDispatcher::class) {
+                array_shift($trace);
+            }
+        } else {
+            $trace = false;
+        }
 
         // Build request
         $request = $this->buildDataPacket($level, $message, $context);
@@ -116,6 +133,7 @@ class SentryLogger extends AbstractLogger
             "level",
             "logger",
             "tags",
+            "timeout",
         ];
 
         // List of keys which need to skip
@@ -214,13 +232,19 @@ class SentryLogger extends AbstractLogger
                 'module' => $exception->getFile() .':'. $exception->getLine(),
             ];
 
+            // Prepare trace
             $trace = $exception->getTrace();
-            $frame_where_exception_thrown = array(
-                'file' => $exception->getFile(),
-                'line' => $exception->getLine(),
-            );
+            if (
+                !empty($trace[0]["file"]) && !empty($trace[0]["line"])
+                && ($trace[0]["file"] !== $exception->getFile() || $trace[0]["line"] !== $exception->getLine())
+            ) {
+                $frame_where_exception_thrown = array(
+                    'file' => $exception->getFile(),
+                    'line' => $exception->getLine(),
+                );
 
-            array_unshift($trace, $frame_where_exception_thrown);
+                array_unshift($trace, $frame_where_exception_thrown);
+            }
 
             $exceptionData['stacktrace'] = array(
                 'frames' => Raven_Stacktrace::get_stack_info($trace),
