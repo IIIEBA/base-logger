@@ -3,6 +3,7 @@
     "description": "Base logger dispatcher with handlers",
     "type": "library",
     "minimum-stability": "stable",
+    "license": "MIT",
     "authors": [
         {
             "name": "Andrew Shevchuk",
