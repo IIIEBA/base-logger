@@ -2,6 +2,8 @@
 
 namespace BaseLogger\Lib\Util;
 
+use Psr\Log\LoggerInterface;
+
 /**
  * Class PhpHandler
  *
@@ -9,6 +11,11 @@ namespace BaseLogger\Lib\Util;
  */
 interface PhpHandlerInterface
 {
+    /**
+     * @param LoggerInterface $logger
+     */
+    public function setLogger(LoggerInterface $logger);
+
     /**
      * Register custom error handler for application
      */

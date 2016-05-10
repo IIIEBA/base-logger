@@ -35,6 +35,14 @@ class PhpHandler implements PhpHandlerInterface
     }
 
     /**
+     * @param LoggerInterface $logger
+     */
+    public function setLogger(LoggerInterface $logger)
+    {
+        $this->logger = $logger;
+    }
+
+    /**
      * Register custom error handler for application
      */
     public function registerErrorHandler()
