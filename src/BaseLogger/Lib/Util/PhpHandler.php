@@ -130,10 +130,10 @@ class PhpHandler implements PhpHandlerInterface
     /**
      * Custom PHP exception handler
      *
-     * @param \Exception $exception
-     * @throws \Exception
+     * @param \Throwable $exception
+     * @throws \Throwable
      */
-    public function exceptionHandler(\Exception $exception)
+    public function exceptionHandler(\Throwable $exception)
     {
         // Hot fix for support php7 strict mode exception
         // TODO: add switch case for throwable errors
