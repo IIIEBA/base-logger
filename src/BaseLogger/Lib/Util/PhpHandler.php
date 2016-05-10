@@ -135,6 +135,12 @@ class PhpHandler implements PhpHandlerInterface
      */
     public function exceptionHandler(\Exception $exception)
     {
+        // Hot fix for support php7 strict mode exception
+        // TODO: add switch case for throwable errors
+        if ($exception instanceof \Error) {
+            $exception = new \Exception($exception->getMessage(), $exception->getCode(), $exception);
+        }
+
         $this->logger->error($exception->getMessage(), [
             "exception" => $exception,
             "file" => $exception->getFile(),
