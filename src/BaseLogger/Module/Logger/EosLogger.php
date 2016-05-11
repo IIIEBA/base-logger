@@ -6,6 +6,7 @@ use BaseExceptions\Exception\InvalidArgument\EmptyStringException;
 use BaseExceptions\Exception\InvalidArgument\NotIntegerException;
 use BaseExceptions\Exception\InvalidArgument\NotPositiveNumericException;
 use BaseExceptions\Exception\InvalidArgument\NotStringException;
+use BaseLogger\Lib\Component\LoggerDispatcher;
 use Psr\Log\AbstractLogger;
 
 /**
@@ -48,6 +49,10 @@ class EosLogger extends AbstractLogger
      * @var string|null
      */
     private $ipAddress;
+    /**
+     * @var array|\string[]
+     */
+    private $levelList;
 
     /**
      * EosLogger constructor.
@@ -102,6 +107,7 @@ class EosLogger extends AbstractLogger
         $this->uname  = gethostname();
         $this->realm  = $realm;
         $this->secret = $secret;
+        $this->levelList = $levelList;
     }
 
     /**
@@ -114,14 +120,79 @@ class EosLogger extends AbstractLogger
      */
     public function log($level, $message, array $context = [])
     {
-        $tags = [$this->uname, $level];
-        if (!empty($context["sessionId"])) {
-            $tags[] = $context["sessionId"];
-            $data['proc-id'] = $context["sessionId"];
+        if (!is_scalar($message)) {
+            return;
         }
 
-        $data['message'] = $message;
-        $data['event-time'] = date('Y-m-d\TH:i:s.', intval(microtime(true)));
+        // Check is given level supported for current logger
+        if (!empty($this->levelList) && !in_array($level, $this->levelList)) {
+            return;
+        }
+
+        list($ms, $ts) = explode(' ', microtime());
+        $tags = [$this->uname, $level];
+        $data = [
+            "event-time" => date('Y-m-d\TH:i:s.', $ts) . sprintf("%06d", $ms * 1000000) . date('P'),
+            "message" => $message,
+        ];
+
+        // Parse context
+        foreach ($context as $key => $value) {
+            switch ($key) {
+                case "tags":
+                    if (is_array($value)) {
+                        foreach ($value as $tagKey => $tagValue) {
+                            $tags[] = (is_numeric($tagKey) ? "" : $tagKey . "-") . $tagValue;
+                        }
+                    } else {
+                        $tags[] = $value;
+                    }
+
+                    break;
+
+                case "sessionId":
+                    $tags[] = $context["sessionId"];
+                    $data["eos-id"] = $context["sessionId"];
+
+                    break;
+
+                case "exception":
+                    if (is_object($value) && $value instanceof \Exception) {
+                        $tags[] = 'error';
+                        $data['exception'] = [
+                            'message' => $value->getMessage(),
+                            'code'    => $value->getCode(),
+                            'trace'   => $value->getTrace(),
+                        ];
+                    }
+
+                    break;
+
+                case "object":
+                    if (is_object($value)) {
+                        $object = get_class($value);
+                        $data[$key] = $object;
+                        $tags[] = $object;
+                    }
+
+                    break;
+
+                default:
+                    $data[$key] = $value;
+            }
+        }
+
+        if (array_key_exists("file", $data) && array_key_exists("line", $data)) {
+            $trace = debug_backtrace();
+            array_shift($trace);
+
+            if ($trace[0]["class"] === LoggerDispatcher::class) {
+                array_shift($trace);
+            }
+
+            $data["file"] = isset($trace[0]["file"]) ? $trace[0]["file"] : "<file>";
+            $data["line"] = isset($trace[0]["line"]) ? $trace[0]["line"] : "<line>";
+        }
 
         $this->send($tags, $data);
     }
