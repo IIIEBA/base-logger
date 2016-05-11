@@ -1,0 +1,203 @@
+<?php
+
+namespace BaseLogger\Module\Logger;
+
+use BaseExceptions\Exception\InvalidArgument\EmptyStringException;
+use BaseExceptions\Exception\InvalidArgument\NotIntegerException;
+use BaseExceptions\Exception\InvalidArgument\NotPositiveNumericException;
+use BaseExceptions\Exception\InvalidArgument\NotStringException;
+use Psr\Log\AbstractLogger;
+
+/**
+ * Class EosLogger
+ * @package BaseLogger\Module\Logger
+ */
+class EosLogger extends AbstractLogger
+{
+    const UDP_MAX_SIZE = 64000;
+
+    /**
+     * @var resource
+     */
+    private $socket;
+    /**
+     * @var string
+     */
+    private $host;
+    /**
+     * @var int
+     */
+    private $port;
+    /**
+     * @var string
+     */
+    private $uname;
+    /**
+     * @var string
+     */
+    private $realm;
+    /**
+     * @var string
+     */
+    private $secret;
+    /**
+     * @var int|null
+     */
+    private $ipAddressUpdateTime;
+    /**
+     * @var string|null
+     */
+    private $ipAddress;
+
+    /**
+     * EosLogger constructor.
+     * @param string $host
+     * @param string $realm
+     * @param string $secret
+     * @param int|null $port
+     * @param string[] $levelList
+     */
+    public function __construct(
+        $host,
+        $realm,
+        $secret,
+        $port = null,
+        array $levelList = []
+    ) {
+        if (!is_string($host)) {
+            throw new NotStringException("host");
+        }
+        if (empty($host)) {
+            $host = "127.0.0.1";
+        }
+
+        if (!is_string($realm)) {
+            throw new NotStringException("realm");
+        }
+        if (empty($realm)) {
+            throw new EmptyStringException("realm");
+        }
+
+        if (!is_string($secret)) {
+            throw new NotStringException("secret");
+        }
+        if (empty($secret)) {
+            throw new EmptyStringException("secret");
+        }
+
+        if (!is_null($port)) {
+            if (!is_int($port)) {
+                throw new NotIntegerException("port");
+            }
+            if ($port < 1) {
+                throw new NotPositiveNumericException("port");
+            }
+        } else {
+            $port = 8087;
+        }
+
+        $this->socket = socket_create(AF_INET, SOCK_DGRAM, SOL_UDP);
+        $this->host   = $host;
+        $this->port   = $port;
+        $this->uname  = gethostname();
+        $this->realm  = $realm;
+        $this->secret = $secret;
+    }
+
+    /**
+     * Logs with an arbitrary level.
+     *
+     * @param mixed $level
+     * @param string $message
+     * @param array $context
+     * @return null
+     */
+    public function log($level, $message, array $context = [])
+    {
+        $tags = [$this->uname, $level];
+        if (!empty($context["sessionId"])) {
+            $tags[] = $context["sessionId"];
+            $data['proc-id'] = $context["sessionId"];
+        }
+
+        $data['message'] = $message;
+        $data['event-time'] = date('Y-m-d\TH:i:s.', intval(microtime(true)));
+
+        $this->send($tags, $data);
+    }
+
+    /**
+     * Utility method to send data into EOS
+     *
+     * @param string[] $tags
+     * @param mixed    $data
+     */
+    private function send($tags, $data)
+    {
+        // Serializing objects
+        foreach ($data as $key => $value) {
+            if ($key === 'exception') {
+                continue;
+            }
+            $data[$key] = $this->safeSerialize($value);
+        }
+
+        $data = json_encode($data);
+
+        if (strlen($data) > self::UDP_MAX_SIZE) {
+            $data = substr($data, 0, self::UDP_MAX_SIZE);
+        }
+
+        // Creating packet and signature
+        $nonce  = microtime(true) . mt_rand();
+        $hash   = hash("sha256", $nonce . $data . $this->secret);
+        $packet = $nonce . "\n" . $this->realm . "+" . $hash . "\nlog://" . implode(':', $tags) . "\n" . $data;
+
+        // Sending
+        socket_sendto(
+            $this->socket,
+            $packet,
+            strlen($packet),
+            0,
+            $this->getTargetIp(),
+            $this->port
+        );
+    }
+
+    /**
+     * Serializes incoming data
+     *
+     * @param mixed $data
+     * @return string
+     */
+    public function safeSerialize($data)
+    {
+        if (is_array($data) || is_object($data)) {
+            $s = json_encode($data);
+            if ($s === false) {
+                // Possible binary data
+                $s = serialize($s);
+            }
+
+            return $s;
+        } else {
+            return $data;
+        }
+    }
+
+    /**
+     * Resolves hostname once in 60 seconds
+     *
+     * @return string
+     */
+    private function getTargetIp()
+    {
+        if ($this->ipAddressUpdateTime === null || time() - 60 > $this->ipAddressUpdateTime) {
+            // Need resolve hostname
+            $this->ipAddress = gethostbyname($this->host);
+            $this->ipAddressUpdateTime = time();
+        }
+
+        return $this->ipAddress;
+    }
+}

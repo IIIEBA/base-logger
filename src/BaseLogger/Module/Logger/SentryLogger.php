@@ -41,7 +41,7 @@ class SentryLogger extends AbstractLogger
         if (empty($dns)) {
             throw new EmptyStringException("dns");
         }
-        
+
         $allowedLevels = [
             LogLevel::DEBUG,
             LogLevel::INFO,
