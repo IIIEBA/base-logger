@@ -7,6 +7,7 @@ use BaseExceptions\Exception\InvalidArgument\NotIntegerException;
 use BaseExceptions\Exception\InvalidArgument\NotPositiveNumericException;
 use BaseExceptions\Exception\InvalidArgument\NotStringException;
 use BaseLogger\Lib\Component\LoggerDispatcher;
+use BaseLogger\Lib\Util\RandomGenerator;
 use Psr\Log\AbstractLogger;
 
 /**
@@ -53,6 +54,10 @@ class EosLogger extends AbstractLogger
      * @var array|\string[]
      */
     private $levelList;
+    /**
+     * @var RandomGenerator
+     */
+    private $randomGenerator;
 
     /**
      * EosLogger constructor.
@@ -108,6 +113,7 @@ class EosLogger extends AbstractLogger
         $this->realm  = $realm;
         $this->secret = $secret;
         $this->levelList = $levelList;
+        $this->randomGenerator = new RandomGenerator();
     }
 
     /**
@@ -133,6 +139,7 @@ class EosLogger extends AbstractLogger
         $tags = [$this->uname, $level];
         $data = [
             "event-time" => date('Y-m-d\TH:i:s.', $ts) . sprintf("%06d", $ms * 1000000) . date('P'),
+            "proc-id" => $this->randomGenerator->generateString(12),
             "message" => $message,
         ];
 
@@ -182,7 +189,7 @@ class EosLogger extends AbstractLogger
             }
         }
 
-        if (array_key_exists("file", $data) && array_key_exists("line", $data)) {
+        if (!array_key_exists("file", $data) && !array_key_exists("line", $data)) {
             $trace = debug_backtrace();
             array_shift($trace);
 
