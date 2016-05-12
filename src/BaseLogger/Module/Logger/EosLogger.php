@@ -6,15 +6,13 @@ use BaseExceptions\Exception\InvalidArgument\EmptyStringException;
 use BaseExceptions\Exception\InvalidArgument\NotIntegerException;
 use BaseExceptions\Exception\InvalidArgument\NotPositiveNumericException;
 use BaseExceptions\Exception\InvalidArgument\NotStringException;
-use BaseLogger\Lib\Component\LoggerDispatcher;
 use BaseLogger\Lib\Util\RandomGenerator;
-use Psr\Log\AbstractLogger;
 
 /**
  * Class EosLogger
  * @package BaseLogger\Module\Logger
  */
-class EosLogger extends AbstractLogger
+class EosLogger extends BaseLogger
 {
     const UDP_MAX_SIZE = 64000;
 
@@ -114,6 +112,8 @@ class EosLogger extends AbstractLogger
         $this->secret = $secret;
         $this->levelList = $levelList;
         $this->randomGenerator = new RandomGenerator();
+
+        parent::__construct();
     }
 
     /**
@@ -129,6 +129,9 @@ class EosLogger extends AbstractLogger
         if (!is_scalar($message)) {
             return;
         }
+
+        // Convert PSR placeholders to EOS placeholders
+        $message = preg_replace("/{(.*)}/", ":$1", $message);
 
         // Check is given level supported for current logger
         if (!empty($this->levelList) && !in_array($level, $this->levelList)) {
@@ -189,16 +192,12 @@ class EosLogger extends AbstractLogger
             }
         }
 
-        if (!array_key_exists("file", $data) && !array_key_exists("line", $data)) {
-            $trace = debug_backtrace();
-            array_shift($trace);
+        if (!in_array("error", $tags) && !array_key_exists("file", $data) && !array_key_exists("line", $data)) {
+            $trace = $this->getTrace();
+            $traceElm = reset($trace);
 
-            if ($trace[0]["class"] === LoggerDispatcher::class) {
-                array_shift($trace);
-            }
-
-            $data["file"] = isset($trace[0]["file"]) ? $trace[0]["file"] : "<file>";
-            $data["line"] = isset($trace[0]["line"]) ? $trace[0]["line"] : "<line>";
+            $data["file"] = isset($traceElm["file"]) ? $traceElm["file"] : "<file>";
+            $data["line"] = isset($traceElm["line"]) ? $traceElm["line"] : "<line>";
         }
 
         $this->send($tags, $data);

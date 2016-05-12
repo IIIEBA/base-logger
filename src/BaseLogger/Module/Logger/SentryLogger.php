@@ -4,8 +4,6 @@ namespace BaseLogger\Module\Logger;
 
 use BaseExceptions\Exception\InvalidArgument\EmptyStringException;
 use BaseExceptions\Exception\InvalidArgument\NotStringException;
-use BaseLogger\Lib\Component\LoggerDispatcher;
-use Psr\Log\AbstractLogger;
 use Psr\Log\LogLevel;
 use Raven_Stacktrace;
 
@@ -14,7 +12,7 @@ use Raven_Stacktrace;
  *
  * @package BaseLogger\Module\Component
  */
-class SentryLogger extends AbstractLogger
+class SentryLogger extends BaseLogger
 {
     /**
      * @var array
@@ -59,6 +57,8 @@ class SentryLogger extends AbstractLogger
                 "timeout" => 1
             ]
         );
+
+        parent::__construct();
     }
 
     /**
@@ -81,16 +81,7 @@ class SentryLogger extends AbstractLogger
         }
 
         // Build trace
-        if (!array_key_exists("exception", $context)) {
-            $trace = debug_backtrace();
-            array_shift($trace);
-
-            if ($trace[0]["class"] === LoggerDispatcher::class) {
-                array_shift($trace);
-            }
-        } else {
-            $trace = false;
-        }
+        $trace = !array_key_exists("exception", $context) ? $this->getTrace() : false;
 
         // Build request
         $request = $this->buildDataPacket($level, $message, $context);
