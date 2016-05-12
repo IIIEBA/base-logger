@@ -131,7 +131,7 @@ class EosLogger extends BaseLogger
         }
 
         // Convert PSR placeholders to EOS placeholders
-        $message = preg_replace("/{(.*)}/", ":$1", $message);
+        $message = preg_replace("/{(.*?)}/", ":$1", $message);
 
         // Check is given level supported for current logger
         if (!empty($this->levelList) && !in_array($level, $this->levelList)) {
