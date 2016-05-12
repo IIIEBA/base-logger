@@ -60,7 +60,7 @@ class BaseLogger extends AbstractLogger
             foreach ($this->excludedFiles as $className) {
                 if (strpos($item["file"], $className) !== false) {
                     unset($trace[$key]);
-                    continue;
+                    break;
                 }
             }
 
