@@ -4,8 +4,8 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#composer-lock-the-lock-file",
         "This file is @generated automatically"
     ],
-    "hash": "869f2b20d2fd9e282cdf0fe86abfc860",
-    "content-hash": "8af25568ed10d2aff13aa16995dec99c",
+    "hash": "5b2633d0086dcc13ead256684227e055",
+    "content-hash": "6b47d154edc6887f55af14bb014911b9",
     "packages": [
         {
             "name": "ashevchuk/base-exceptions",
@@ -76,17 +76,17 @@
             "time": "2012-12-21 11:40:51"
         },
         {
-            "name": "raven/raven",
-            "version": "0.13.0",
+            "name": "sentry/sentry",
+            "version": "0.15.0",
             "source": {
                 "type": "git",
-                "url": "https://github.com/getsentry/raven-php.git",
-                "reference": "1d5be07afc001df98a3528d1f928eeb2241afce6"
+                "url": "https://github.com/getsentry/sentry-php.git",
+                "reference": "c1c1eff438bcdc9ebf9c604906c832471a7e3fa4"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/getsentry/raven-php/zipball/1d5be07afc001df98a3528d1f928eeb2241afce6",
-                "reference": "1d5be07afc001df98a3528d1f928eeb2241afce6",
+                "url": "https://api.github.com/repos/getsentry/sentry-php/zipball/c1c1eff438bcdc9ebf9c604906c832471a7e3fa4",
+                "reference": "c1c1eff438bcdc9ebf9c604906c832471a7e3fa4",
                 "shasum": ""
             },
             "require": {
@@ -103,7 +103,7 @@
             "type": "library",
             "extra": {
                 "branch-alias": {
-                    "dev-master": "0.13.x-dev"
+                    "dev-master": "0.15.x-dev"
                 }
             },
             "autoload": {
@@ -113,7 +113,7 @@
             },
             "notification-url": "https://packagist.org/downloads/",
             "license": [
-                "BSD"
+                "BSD-3-Clause"
             ],
             "authors": [
                 {
@@ -127,7 +127,7 @@
                 "log",
                 "logging"
             ],
-            "time": "2015-09-09 18:12:58"
+            "time": "2016-04-29 10:46:58"
         }
     ],
     "packages-dev": [],
