@@ -4,7 +4,8 @@ namespace BaseLogger\Lib\Component;
 
 use BaseExceptions\Exception\InvalidArgument\EmptyStringException;
 use BaseExceptions\Exception\InvalidArgument\NotStringException;
-use BaseLogger\Lib\Util\RandomGenerator;
+use BaseLogger\Lib\Util\SessionIdContainer;
+use BaseLogger\Lib\Util\SessionIdContainerInterface;
 use Psr\Log\AbstractLogger;
 use Psr\Log\LoggerInterface;
 
@@ -19,24 +20,27 @@ class LoggerDispatcher extends AbstractLogger
      * @var LoggerInterface[]
      */
     private $loggerList = [];
-
     /**
-     * @var string
+     * @var SessionIdContainerInterface
      */
-    private $sessionId;
+    private $sessionIdContainer;
 
     /**
      * LoggerDispatcher constructor.
+     * @param SessionIdContainerInterface $sessionIdContainer
      */
-    public function __construct()
+    public function __construct(SessionIdContainerInterface $sessionIdContainer = null)
     {
-        $randomGenerator = new RandomGenerator();
-        $this->sessionId = $randomGenerator->generateString(12);
+        if ($sessionIdContainer === null) {
+            $sessionIdContainer = new SessionIdContainer();
+        }
+
+        $this->sessionIdContainer = $sessionIdContainer;
     }
 
     /**
      * Register new logger to dispatcher
-     * 
+     *
      * @param string $name
      * @param LoggerInterface $logger
      */
@@ -62,13 +66,12 @@ class LoggerDispatcher extends AbstractLogger
      */
     public function log($level, $message, array $context = [])
     {
-        // Add session if to context if not exist
-        if (empty($context["sessionId"])) {
-            $context["sessionId"] = $this->sessionId;
-        }
+        $context["sessionId"] = $this->sessionIdContainer->getSessionId();
         
         foreach ($this->loggerList as $logger) {
             $logger->log($level, $message, $context);
         }
+
+        return null;
     }
 }

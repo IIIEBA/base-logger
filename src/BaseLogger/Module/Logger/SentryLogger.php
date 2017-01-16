@@ -97,6 +97,8 @@ class SentryLogger extends BaseLogger
 
         // Log message
         $this->client->capture($request, $trace);
+
+        return null;
     }
 
 
@@ -108,7 +110,7 @@ class SentryLogger extends BaseLogger
      * @param array $context
      * @return array
      */
-    public function buildDataPacket ($level, $message, array $context)
+    public function buildDataPacket($level, $message, array $context)
     {
         $result = [
             "logger" => "php",
@@ -225,8 +227,7 @@ class SentryLogger extends BaseLogger
 
             // Prepare trace
             $trace = $exception->getTrace();
-            if (
-                !empty($trace[0]["file"]) && !empty($trace[0]["line"])
+            if (!empty($trace[0]["file"]) && !empty($trace[0]["line"])
                 && ($trace[0]["file"] !== $exception->getFile() || $trace[0]["line"] !== $exception->getLine())
             ) {
                 $frame_where_exception_thrown = array(

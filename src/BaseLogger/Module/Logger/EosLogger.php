@@ -201,6 +201,8 @@ class EosLogger extends BaseLogger
         }
 
         $this->send($tags, $data);
+
+        return null;
     }
 
     /**

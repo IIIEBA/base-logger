@@ -4,8 +4,8 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#composer-lock-the-lock-file",
         "This file is @generated automatically"
     ],
-    "hash": "5b2633d0086dcc13ead256684227e055",
-    "content-hash": "6b47d154edc6887f55af14bb014911b9",
+    "hash": "ff0f12a5196394b18ec47da69069817f",
+    "content-hash": "3d47aa52f960477665491f6741e81eed",
     "packages": [
         {
             "name": "ashevchuk/base-exceptions",
@@ -36,6 +36,40 @@
             ],
             "description": "List of base exceptions for application",
             "time": "2016-02-25 13:36:04"
+        },
+        {
+            "name": "ashevchuk/enum",
+            "version": "0.1.4",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/IIIEBA/enum.git",
+                "reference": "0a086c1ab7976186a860590bec3af20b55dc8086"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/IIIEBA/enum/zipball/0a086c1ab7976186a860590bec3af20b55dc8086",
+                "reference": "0a086c1ab7976186a860590bec3af20b55dc8086",
+                "shasum": ""
+            },
+            "require-dev": {
+                "ashevchuk/phpunit-plus": "~1.1",
+                "phpunit/phpunit": "~4.7"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-0": {
+                    "Enum\\": "src"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "authors": [
+                {
+                    "name": "Andrew Shevchuk",
+                    "email": "shevchuk@be-aware.com.ua"
+                }
+            ],
+            "description": "Add enum to php",
+            "time": "2016-06-03 14:50:42"
         },
         {
             "name": "psr/log",
