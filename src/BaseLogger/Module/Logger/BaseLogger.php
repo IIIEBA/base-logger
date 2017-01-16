@@ -45,7 +45,7 @@ class BaseLogger extends AbstractLogger
 
     /**
      * Get real backtrace without system logger calls
-     * 
+     *
      * @return array
      */
     public function getTrace()

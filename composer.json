@@ -19,6 +19,7 @@
     "require": {
         "psr/log": "^1.0",
         "sentry/sentry": "^0.15.0",
-        "ashevchuk/base-exceptions": "^0.1.3"
+        "ashevchuk/base-exceptions": "^0.1.3",
+        "ashevchuk/enum": "^0.1.4"
     }
 }
